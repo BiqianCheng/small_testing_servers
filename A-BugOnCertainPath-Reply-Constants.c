@@ -45,8 +45,8 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
 
     int len, n, o;
 
-    len = sizeof(cliaddr); // len is value/resuslt
-
+    // len = sizeof(cliaddr); // len is value/resuslt
+    len = sizeof(largeReply);
     // for (int i = 0; i < 2; i++)
     // {
     // n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
@@ -62,9 +62,17 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
         // }
 
         // printf("Client : %s\n", buffer);
+        if (sizeof(largeReply) > 100)
+        {
+            sendto(sockfd, (const char *)largeReply, sizeof(largeReply),
+                           MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
+            klee_print_expr("buffer == a", len);
+        }
         // long size = sendto(sockfd, (const char *)largeReply, sizeof(largeReply),
         //                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
         printf("Buffer triger:%d, size large reply: %d\n", *buffer, sizeof(largeReply));
+        
+        printf("\n -------------- \n");
         // break;
     }
     else
@@ -78,6 +86,8 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
         // long size = sendto(sockfd, (const char *)smallReply, sizeof(smallReply),
         //                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
         printf("Buffer triger:%d, size small reply: %d\n", *buffer, sizeof(smallReply));
+        klee_print_expr("buffer != a", *buffer);
+        printf("\n --------------\n");
         // break;
     }
     // }
