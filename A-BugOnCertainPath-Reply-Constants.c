@@ -12,13 +12,9 @@
 #define MAXLINE 1024
 
 // Driver code
-void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct sockaddr_in cliaddr)
+void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct sockaddr_in cliaddr, char reply[])
 {
     printf("Part A: Bandwidth bug on only certain path. Only triggers the bug with client sending a single char 'a'. \n\n-----------------\nphp client.php a\n------------------\n");
-
-    char largeReply[] =
-        "a1b2c3d4e5f6g7h8i9j10a1b2c3d4e5f6g7h8i9j10a1b2c3d4e5f6g7h8i9j10a1b2c3d4e5f6g7h8i9j10a1b2c3d4e5f6g7h8i9j10a1b2c3d4e5f6g7h8i9j10a1b2c3d4e5f6g7h8i9j10a1b2c3d4e5f6g7h8i9j10";
-    char smallReply[] = "5";
 
     // Creating socket file descriptor
     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -45,50 +41,33 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
 
     int len, n, o;
 
-    // len = sizeof(cliaddr); // len is value/resuslt
-    len = sizeof(largeReply);
-    // for (int i = 0; i < 2; i++)
-    // {
     // n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
     //              (struct sockaddr *)&cliaddr, &len);
-    // buffer[2] = '\0';
-    // printf("Client : %s\n", buffer);
 
     if (strcmp(buffer, "a") == 0)
     {
-        // if (klee_is_symbolic(*buffer))
-        // {
-        //     printf("buffer is symbolic");
-        // }
-
-        // printf("Client : %s\n", buffer);
-        if (sizeof(largeReply) > 100)
+        if (sizeof(*reply) > 100)
         {
-            sendto(sockfd, (const char *)largeReply, sizeof(largeReply),
-                           MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-            klee_print_expr("buffer == a", len);
+            sendto(sockfd, (const char *)reply, sizeof(*reply),
+                   MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
         }
+        else
+        {
+            sendto(sockfd, (const char *)reply, sizeof(*reply),
+                   MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
+        }
+
         // long size = sendto(sockfd, (const char *)largeReply, sizeof(largeReply),
         //                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-        printf("Buffer triger:%d, size large reply: %d\n", *buffer, sizeof(largeReply));
-        
         printf("\n -------------- \n");
-        // break;
     }
     else
     {
-        if (klee_is_symbolic(buffer))
-        {
-            printf("buffer is symbolic");
-        }
-
-        // printf("Client : %s\n",buffer);
         // long size = sendto(sockfd, (const char *)smallReply, sizeof(smallReply),
         //                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-        printf("Buffer triger:%d, size small reply: %d\n", *buffer, sizeof(smallReply));
-        klee_print_expr("buffer != a", *buffer);
-        printf("\n --------------\n");
-        // break;
+        sendto(sockfd, (const char *)reply, sizeof(*reply),
+               MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
+        // klee_print_expr("buffer != a", *buffer);
     }
     // }
 }
@@ -96,14 +75,16 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
 int main()
 {
     char buffer[MAXLINE];
-    // printf("The size of buffer is %zu\n", sizeof(buffer));
     int sockfd;
     struct sockaddr_in servaddr, cliaddr;
+    char reply[MAXLINE];
+    int sizeOfReply = klee_int("sizeOfReply");
+    char *reply = malloc(sizeof(char) * sizeOfReply);
+    klee_make_symbolic(&reply, sizeof(reply), "reply");
     klee_make_symbolic(&buffer, sizeof(buffer), "buffer");
-    // klee_print_expr("ANYTHING", buffer);
     klee_assume(buffer[MAXLINE - 1] == '\0');
     klee_make_symbolic(&sockfd, sizeof(sockfd), "sockfd");
-    evalBuffer(buffer, sockfd, servaddr, cliaddr);
+    evalBuffer(buffer, sockfd, servaddr, cliaddr, reply);
 
     return 0;
 }

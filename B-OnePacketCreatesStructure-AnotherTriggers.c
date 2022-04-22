@@ -63,37 +63,51 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
                            // printf("test4");
                            // while (1)
                            // {
-    for (int i = 0; i < 2; i++)
-    {
 
-        // n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *)&cliaddr, &len);
-        // klee_make_symbolic(&buffer, sizeof(buffer), "buffer");
-        // klee_assume(buffer[MAXLINE - 1] == '\0');
-        // buffer[n] = '\0';
-        // printf("test3");
-        // printf("Client : %c\n", buffer[0]);
-        // printf("*** Current loop num ***: %d\n", i);
-        if (strcmp(buffer, "a") == 0)
-        {
-            time_t mytime = time(NULL);
-            char *time_str = ctime(&mytime);
-            // time_str[strlen(time_str) - 1] = '\0';
-            // printf("A: %d\n", strlen(time_str));
-            dataStructure = (char *)realloc(dataStructure, (strlen(time_str) + strlen(dataStructure) + 1) * sizeof(char));
-            strcat(dataStructure, time_str);
-            // printf("Data Structure : %s\n", dataStructure);
-            // printf("***DATA STRUCTURE SET***\n");
-            printf("size data: %d\n", sizeof(*dataStructure));
-        }
-        else
-        {
-            // dataStructure = (char *)realloc(dataStructure, (strlen(dataStructure)+1)*sizeof(char));
-            // printf("Data Structure : %s\n", dataStructure);
-            // long size = sendto(sockfd, (const char)dataStructure, sizeof(*dataStructure),
-            //                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-            printf("size reply: %d\n", sizeof(*dataStructure));
-            // printf("***SENT***\n");
-        }
+    // n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL, (struct sockaddr *)&cliaddr, &len);
+
+    if (strcmp(buffer, "a") == 0)
+    {
+        time_t mytime = time(NULL);
+        char *time_str = ctime(&mytime);
+        // time_str[strlen(time_str) - 1] = '\0';
+        // printf("A: %d\n", strlen(time_str));
+        dataStructure = (char *)realloc(dataStructure, (strlen(time_str) + strlen(dataStructure) + 1) * sizeof(char));
+        strcat(dataStructure, time_str);
+        // printf("Data Structure : %s\n", dataStructure);
+        // printf("***DATA STRUCTURE SET***\n");
+        // printf("size data: %d\n", sizeof(*dataStructure));
+    }
+    else
+    {
+        // dataStructure = (char *)realloc(dataStructure, (strlen(dataStructure)+1)*sizeof(char));
+        // printf("Data Structure : %s\n", dataStructure);
+        long size = sendto(sockfd, (const char)dataStructure, sizeof(*dataStructure),
+                           MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
+        // printf("size reply: %d\n", sizeof(*dataStructure));
+        // printf("***SENT***\n");
+    }
+
+    if (strcmp(buffer, "a") == 0)
+    {
+        time_t mytime = time(NULL);
+        char *time_str = ctime(&mytime);
+        // time_str[strlen(time_str) - 1] = '\0';
+        // printf("A: %d\n", strlen(time_str));
+        dataStructure = (char *)realloc(dataStructure, (strlen(time_str) + strlen(dataStructure) + 1) * sizeof(char));
+        strcat(dataStructure, time_str);
+        // printf("Data Structure : %s\n", dataStructure);
+        // printf("***DATA STRUCTURE SET***\n");
+        // printf("size data: %d\n", sizeof(*dataStructure));
+    }
+    else
+    {
+        // dataStructure = (char *)realloc(dataStructure, (strlen(dataStructure)+1)*sizeof(char));
+        // printf("Data Structure : %s\n", dataStructure);
+        long size = sendto(sockfd, (const char)dataStructure, sizeof(*dataStructure),
+                           MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
+        // printf("size reply: %d\n", sizeof(*dataStructure));
+        // printf("***SENT***\n");
     }
 
     // }
@@ -107,7 +121,8 @@ int main()
     // printf("The size of buffer is %zu\n", sizeof(buffer));
     int sockfd;
     struct sockaddr_in servaddr, cliaddr;
-
+    klee_make_symbolic(&buffer, sizeof(buffer), "buffer");
+    klee_assume(buffer[MAXLINE - 1] == '\0');
     klee_make_symbolic(&sockfd, sizeof(sockfd), "sockfd");
     evalBuffer(buffer, sockfd, servaddr, cliaddr);
     return 0;
