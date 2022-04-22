@@ -88,6 +88,8 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
         // printf("***SENT***\n");
     }
 
+    recvfrom(sockfd, (char *)buffer, sizeof(*buffer), MSG_WAITALL, (struct sockaddr *)&cliaddr, &len);
+
     if (strcmp(buffer, "a") == 0)
     {
         time_t mytime = time(NULL);
