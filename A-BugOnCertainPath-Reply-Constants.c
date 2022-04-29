@@ -41,12 +41,14 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
 
     int len, n, o;
 
-    // n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
-    //              (struct sockaddr *)&cliaddr, &len);
+    n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
+                 (struct sockaddr *)&cliaddr, &len);
 
     if (strcmp(buffer, "a") == 0)
     {
-        if (sizeof(*reply) > 100)
+        printf("size of reply: %lu\n", sizeof(*reply)/sizeof(char));
+        
+        if (sizeof(reply) > 100)
         {
             sendto(sockfd, (const char *)reply, sizeof(*reply),
                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
@@ -78,8 +80,7 @@ int main()
     int sockfd;
     struct sockaddr_in servaddr, cliaddr;
     char reply[MAXLINE];
-    int sizeOfReply = klee_int("sizeOfReply");
-    char *reply = malloc(sizeof(char) * sizeOfReply);
+    // char *reply = malloc(MAXLINE);
     klee_make_symbolic(&reply, sizeof(reply), "reply");
     klee_make_symbolic(&buffer, sizeof(buffer), "buffer");
     klee_assume(buffer[MAXLINE - 1] == '\0');
@@ -88,3 +89,5 @@ int main()
 
     return 0;
 }
+
+
