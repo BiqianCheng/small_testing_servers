@@ -39,23 +39,23 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
         exit(EXIT_FAILURE);
     }
 
-    int len, n, o;
+    unsigned int len, n, o;
 
-    n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
+    len = sizeof(cliaddr);
+    n = recvfrom(sockfd, (char *)buffer, MAXLINE * sizeof(char), MSG_WAITALL,
                  (struct sockaddr *)&cliaddr, &len);
-
+    // buffer[n] = '\0';
     if (strcmp(buffer, "a") == 0)
     {
-        printf("size of reply: %lu\n", sizeof(*reply)/sizeof(char));
-        
-        if (sizeof(reply) > 100)
+
+        if (sizeof(*reply) > 100)
         {
-            sendto(sockfd, (const char *)reply, sizeof(*reply),
+            sendto(sockfd, (char *)reply, MAXLINE * sizeof(char),
                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
         }
         else
         {
-            sendto(sockfd, (const char *)reply, sizeof(*reply),
+            sendto(sockfd, (char *)reply, MAXLINE * sizeof(char),
                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
         }
 
@@ -67,10 +67,11 @@ void evalBuffer(char buffer[], int sockfd, struct sockaddr_in servaddr, struct s
     {
         // long size = sendto(sockfd, (const char *)smallReply, sizeof(smallReply),
         //                    MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
-        sendto(sockfd, (const char *)reply, sizeof(*reply),
+        sendto(sockfd, (char *)reply, MAXLINE * sizeof(char),
                MSG_CONFIRM, (const struct sockaddr *)&cliaddr, len);
         // klee_print_expr("buffer != a", *buffer);
     }
+
     // }
 }
 
@@ -83,11 +84,8 @@ int main()
     // char *reply = malloc(MAXLINE);
     klee_make_symbolic(&reply, sizeof(reply), "reply");
     klee_make_symbolic(&buffer, sizeof(buffer), "buffer");
-    klee_assume(buffer[MAXLINE - 1] == '\0');
     klee_make_symbolic(&sockfd, sizeof(sockfd), "sockfd");
     evalBuffer(buffer, sockfd, servaddr, cliaddr, reply);
 
     return 0;
 }
-
-
